@@ -1,0 +1,6 @@
+apache-airflow
+mlflow
+scikit-learn
+pandas
+numpy 
+xgboost

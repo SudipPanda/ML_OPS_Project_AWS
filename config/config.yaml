@@ -1,0 +1,51 @@
+project:
+   name: mlops-project
+   random_seed: 42
+
+data:
+  source: sklearn.california_housing
+  target_column: MedHouseVal
+  test_size: 0.2
+
+
+s3:
+  bucket: mlops-project-bucket-2001
+  raw_prefix: raw
+  validated_prefix: validated
+  processed_prefix: processed
+  features_prefix: features
+  models_prefix: models
+  logs_prefix: logs
+  # endpoint_url is left blank for real AWS S3. In docker-compose.yml this is
+  # overridden (via S3_ENDPOINT_URL env var) to point at the local MinIO
+  # container, which speaks the S3 API.
+  endpoint_url: ""
+  region: us-east-1
+
+
+mlflow:
+  tracking_uri: http://mlflow:5000
+  experiment_name: california-housing-rf
+  registered_model_name: california-housing-regressor
+
+training:
+  model_type: random_forest
+  n_estimators: 200
+  max_depth: 12
+  min_samples_leaf: 2
+
+
+quality_gate:
+  # Model must beat this RMSE (on the held-out test set) to be registered
+  # and promoted. Tune this per-dataset; kept intentionally loose here since
+  # the point of the project is the pipeline, not squeezing out accuracy.
+  max_rmse: 0.75
+
+drift:
+  # Simple population-stability style threshold used by the monitoring task.
+  psi_threshold: 0.2
+
+serving:
+  host: 0.0.0.0
+  port: 8000
+  model_stage: Production
