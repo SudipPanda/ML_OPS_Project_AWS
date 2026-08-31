@@ -3,6 +3,7 @@ from typing import Any
 import boto3
 import pandas as pd
 from src.utils.config import CONFIG
+import io
 
 #create the s3 client here
 def get_s3_client():
@@ -41,9 +42,27 @@ def download_byte(key:str)->bytes:
     obj = s3.get_object(Bucket=CONFIG.s3.bucket, Key=key)
     return obj["Body"].read()
 
+#Write to csv file and parquet file here 
 def write_csv(dataframe , key):
     buffer = io.StringIO()
     df.to_csv(buffer , index=False)
     
     return upload_bytes(buffer.getvalue().encode("utf-8"), key)
-    
+
+def write_parquet(df: pd.DataFrame, key: str) -> str:
+    """Write a DataFrame to S3 as parquet and return its s3:// URI.
+
+    This URI -- not the DataFrame itself -- is what gets passed through
+    Airflow XCom between tasks (see dags/training_pipeline.py)."""
+    buffer = io.BytesIO()
+    df.to_parquet(buffer, index=False)
+    return upload_bytes(buffer.getvalue(), key)
+
+
+def read_parquet(key:str):
+    data =download_byte(key)
+    return pd.read_parquet(io.BytesIO(data))
+
+def read_csv(key:str):
+    data = download_byte(key)
+    return pd.read_csv(io.BytesIO(data))
