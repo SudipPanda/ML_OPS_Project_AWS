@@ -42,6 +42,12 @@ def _load_model_on_startup():
         logger.warning("somethign has went wrong here")
         main_model['model'] = None
 
+@app.post("/reload")
+def reload_model():
+    
+    _load_model_on_startup()
+
+    return {"reloaded": main_model["model"] is not None}
 
 @app.post('/predict' , response_model=PredictRequest)
 def predict(request : PredictRequest)->PredictResponse:
